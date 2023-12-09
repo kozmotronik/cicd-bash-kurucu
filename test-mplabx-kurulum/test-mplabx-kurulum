@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# mplabx platform kurulumu testi
+# Çevre değişkenleri
+    
+projeDizini="/disk/Projeler/UretimOtomasyonu/Bash/UretimOtomasyonu"
+calismaDizini="/disk/Projeler/UretimOtomasyonu/Bash"
+kurucuDizini="${projeDizini}/kurulum"
+ensonSurumDizini="${calismaDizini}/enson_sürüm"
+araclarDizini="${projeDizini}/araclar"
+
+export PATH+=":${araclarDizini}:${kurucuDizini}"
+
+
+# Kurulumu çalıştır
+kurucu
