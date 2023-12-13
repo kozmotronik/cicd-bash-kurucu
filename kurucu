@@ -3,6 +3,7 @@ urtotmKurucuDizini="$(realpath "$0")"
 urtotmKurucuDizini="${urtotmKurucuDizini%/*}"
 urtotmDizini="${urtotmKurucuDizini%/*}" # Bir üst dizin üretim otomasyonu dizini
 urtotmKurucuUretimDizini="${urtotmDizini%/*}" # Bir üst dizin çalışma dizini
+urtotmKurucuUretimDizini="${urtotmKurucuUretimDizini/üretim}" # Bir üst dizin çalışma dizini
 urtotmKurucuLogDizini="${urtotmKurucuUretimDizini%/*}/logs" # Bir üst dizin çalışma dizini
 echo "Kurucu dizini: $urtotmKurucuDizini"
 echo "Üretim Otomasyonu dizini: $urtotmKurucuDizini"
@@ -16,6 +17,10 @@ PATH+=":${urtotmKurucuDizini}/ek"
 
 if [[ ! -d $urtotmKurucuLogDizini ]]; then
     mkdir -p "$urtotmKurucuLogDizini"
+fi
+
+if [[ ! -d $urtotmKurucuUretimDizini ]]; then
+    mkdir -p "$urtotmKurucuUretimDizini"
 fi
 
 urtotmKurucuLogDosyasi="${urtotmKurucuLogDizini}/urtotm-bash-kurulum-$(date +"%Y%m%d-%H%M%S").log"
@@ -51,16 +56,23 @@ platform=$(secenekGoster "$baslikProje" "$platformSec" "${!platformlar[@]}")
 dk=$?
 donusKoduDegerlendir "$dk" "Platform seçimi"
 # echo $platform seçildi
-projeDizini=$(dizinSec "$baslikProje - $hedefiSec")
+projeDizini=$(dizinSec "$baslikProje - $projeDizininiSec")
 dk=$?
 donusKoduDegerlendir "$dk" "Hedef seçimi"
 # echo $projeDizini seçildi
+projeUretimDizini=$(dizinSec "$baslikProje - $uretimDizininiSec")
+dk=$?
+donusKoduDegerlendir "$dk" "Üretim dizini seçimi"
+# echo $projeUretimDizini seçildi
 yedeklemeDiziniAdi=$(girdiAl "$baslikProje" "$yedekDiziniAdiniGir")
 dk=$?
 donusKoduDegerlendir "$dk" "Yedek dizini bilgisi alma"
 # echo $yedeklemeDiziniAdi seçildi
 
-echo "Platform: $platform, Kurulum hedefi: $projeDizini, Yedek dizini adı $yedeklemeDiziniAdi"
+echo "Platform: $platform"
+echo "Proje dizini: $projeDizini"
+echo "Üretim dizini: $projeUretimDizini"
+echo "Yedek dizini adı $yedeklemeDiziniAdi"
 
 if ! tmp=$(platformGecerli "$platform"); then
     mesajGoster hata "$baslikProje" "Geçersiz bir platform: $tmp"
@@ -75,39 +87,46 @@ if [[ ! -e "$projeDizini" ]]; then
 fi
 echo "Hedef tamam: $projeDizini"
 
-# Projenin içinde bulunduğu dizini al
-uretimDizini="${projeDizini%/*}"
-echo "Hedefin dizini $uretimDizini"
-
 # Hedef dizinleri yokla ve gerekirse oluştur
-yedekDizini="${uretimDizini}/${yedeklemeDiziniAdi}"
+if [[ $platform == "${platformlar["Üretim Otomasyonu Bash"]}" ]]; then
+# Üretim otomasyonu için projelere de birer dizin oluştur
+    uretimOtomasyonuDizini="${projeUretimDizini}/.urtotm/${projeAdi}"
+    yedekDizini="${projeUretimDizini}/${yedeklemeDiziniAdi}/${projeAdi}"
+else
+    uretimOtomasyonuDizini="${projeUretimDizini}/.urtotm"
+    yedekDizini="${projeUretimDizini}/${yedeklemeDiziniAdi}"
+fi
 echo "Yedek dizini $yedekDizini"
 if [[ ! -d $yedekDizini ]]; then
-    mkdir "$yedekDizini"
+    if ! mkdir -p "$yedekDizini"; then
+        mesajGoster hata "$baslikProje" "$yedekDizini dizinini yaratma $islemiSirasindaHata"
+        exit 1
+    fi
 fi
 
-uretimOtomasyonuDizini="${uretimDizini}/.urtotm"
 if [[ ! -d "$uretimOtomasyonuDizini" ]]; then
-    mkdir "$uretimOtomasyonuDizini"
+    if ! mkdir -p "$uretimOtomasyonuDizini"; then
+        mesajGoster hata "$baslikProje" "$uretimOtomasyonuDizini dizinini yaratma $islemiSirasindaHata"
+        exit 1
+    fi
 fi
 
-ensonSurumDizini="$(find "$urtotmKurucuUretimDizini" -type d -name enson_sürüm)"
+ensonSurumDizini="$(find "$urtotmKurucuUretimDizini" -type d -name ensonsürüm)"
 echo "Enson sürüm dizini - $ensonSurumDizini"
 if [[ ! -d "$ensonSurumDizini" ]]; then
     echo "Enson sürüm dizini oluşturuluyor..."
-    ensonSurumDizini="${urtotmKurucuUretimDizini}/enson_sürüm"
+    ensonSurumDizini="${urtotmKurucuUretimDizini}/ensonsürüm"
     mkdir -p "$ensonSurumDizini"
 fi
 
-# Normalde herbir üretim otomasyonu reposu, enson sürümünü, enson_sürüm ürün dizinine
+# Normalde herbir üretim otomasyonu reposu, enson sürümünü, ensonsürüm ürün dizinine
 # kurma işini kendi üretim otomasyonu ile yapar. Ancak yine de ilgili reponun son
 # sürümünün olmaması ihtimaline karşın son sürüm dizinlerinin varlığı yoklanır, yoksa
 # son sürümleri ürün dizinine çıkarılır.
 # PWD'yi etkilememek içi GIT_DIR git çevre değişkenini ilgili reponun git dizinine kur
 # GIT_DIR=Hedef-Repo.git git archive main | tar -xf - -C [Hedef dizin]
 # Hedef dizin var olmalı yoksa tar hata verir.
-
-ensonSurumPlatformDizini="${ensonSurumDizini}/${platform}"
+ensonSurumPlatformDizini="${ensonSurumDizini}/urtotm-bash-${platform}"
 echo "Enson sürüm platform dizini - $ensonSurumPlatformDizini"
 if [ ! -d "$ensonSurumPlatformDizini" ]; then
     # Önce dizini oluştur yoksa tar komutu hata verir
@@ -121,7 +140,7 @@ if [ ! -d "$ensonSurumPlatformDizini" ]; then
     fi
 fi
 
-ensonSurumAraclarDizini="${ensonSurumDizini}/araclar"
+ensonSurumAraclarDizini="${ensonSurumDizini}/urtotm-bash-araclar"
 echo "Enson sürüm araçlar dizini - $ensonSurumAraclarDizini"
 if [[ ! -d "$ensonSurumAraclarDizini" ]]; then
     # Önce dizini oluştur yoksa tar komutu hata verir
@@ -135,7 +154,13 @@ if [[ ! -d "$ensonSurumAraclarDizini" ]]; then
     fi
 fi
 
-gitKancalariDizini="$(find "$projeDizini" -type d -name hooks)"
+# find komutu bulunan dizinleri listelemeye en alt dizinlerden başlıyor gibi. Bu yüzden hedefin 
+# alt dizinlerinde başka repolar varsa önce alt dizindeki repoların hooks dizinlerini listeler.
+# Biz burada projenin kendi git reposu ile ilgilendiğimiz için yalnızca projenin reposunun
+# hooks dizinini alacağız. Birden fazla repo olması durumunda projenin reposu en altta olacağı
+# için tail -1 komutuya en sondan birinci çıktıyı alacağız. tail komutu yalnızca bir repo olduğu
+# durumda da sorun yaratmayacaktır.
+gitKancalariDizini="$(find "$projeDizini" -type d -name hooks | tail -1)"
 echo "Git kancaları dizini - $gitKancalariDizini"
 if [[ ! -d "$gitKancalariDizini" ]]; then
     mesajGoster hata "$baslikProje" "$gitReposuBulunamadi"; exit 1
@@ -174,11 +199,11 @@ export urtotm_projeAdi="$projeAdi"
 export urtotm_dialogBaslik="$dialogBaslik"
 export platform="$platform"
 export urtotm_projeDizini="$projeDizini"
-export urtotm_uretimDizini="$uretimDizini"
+export urtotm_uretimDizini="$projeUretimDizini"
 export urtotm_yedekDizini="$yedekDizini"
 export urtotm_projeUrtotmDizini="$uretimOtomasyonuDizini"
 export urtotm_projeUrtotmEnv="$urtotmenv"
-export PATH="${PATH}:${araclarDizini}:${yedekDizini}:${uretimOtomasyonuDizini}"
+export PATH+=:${araclarDizini}:${yedekDizini}:${uretimOtomasyonuDizini}
 export urtotm_projeLogDosyaOneki="${projeLogDosyaOneki}"
 export urtotm_projeLogDizini="$projeLogDizini"
 SON
@@ -186,37 +211,39 @@ SON
 # Kancalara üretim otomasyonu config (urtotmenv) dosyasını source etme ifadesi ekle
 pushd "$gitKancalariDizini"
 while read -r kanca; do
-    # shebang ifadesinden sonraki satıra ekle
-    sed -i "0,/[^#!]*$/a \
-     source \"${urtotmenv}\"\n\
-export urtotm_projeLogDosyasi=\"\${urtotm_projeLogDizini}/\${urtotm_projeLogDosyaOneki}-\$(date +\"%Y%m%d_%H%M%S\")\"\n\
-source logcu \"\$urtotm_projeLogDosyasi\"\nsource etkilesim\n" "$kanca"
+    # source etkilesim ifadesinden önceki satıra ekle
+    sed -i -e "/^source etkilesim/ i\source \"${urtotmenv}\"\\" \
+        -e 'export urtotm_projeLogDosyasi="${urtotm_projeLogDizini}/${urtotm_projeLogDosyaOneki}-$(date +"%Y%m%d_%H%M%S")"\' \
+        -e 'source logcu "$urtotm_projeLogDosyasi"' "$kanca"
 done < <(ls -I "*.sample")
 popd
 
+# Üretim otomasyonu projeleri için güncelleme girdisi oluşturma
+if [[ $platform != "${platformlar["Üretim Otomasyonu Bash"]}" ]]; then
 # En son hedefin güncelleme listesine eklenip eklenmeyeceğini sor.
 # Liste 3 alandan oluşur ve şu biçimdedir:
 #     $1           $2                   $3 
 # [Platform]::[Proje adı]::[Projenin urtotmenv dosya yolu]
-# Güncelleme listesi enson_sürüm dizininde saklanır ve bir platform için üretim otomasyonu
+# Güncelleme listesi ensonsürüm dizininde saklanır ve bir platform için üretim otomasyonu
 # güncellemesi olduğunda, ilgili platformun üretim otomasyonu güncelleme listesini ilgili
 # platform için yoklar. Lisetedeki projelerin platformları bu platform ise herbir proje için
 # yerinde üretim otomasyonu güncellemesi yapılır.
 # urtotmenv projenin üretim otomasyonu ile ilgili tüm bilgileri içerdiğinden
 # güncelleme için gerekli bilgileri sağlar.
-guncellemeDosyasi="${ensonSurumDizini}/.guncellemeListesi"
-if [[ ! -e $guncellemeDosyasi ]]; then
-    touch "$guncellemeDosyasi"
-fi
-if ! grep "$projeAdi" "$guncellemeDosyasi"; then
-    if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
-    then
-        echo "$platform::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
-        echo "$projeDizini güncelleme listesine eklendi"
+    guncellemeDosyasi="${ensonSurumDizini}/.guncellemeListesi"
+    if [[ ! -e $guncellemeDosyasi ]]; then
+        touch "$guncellemeDosyasi"
+    fi
+    if ! grep "$projeAdi" "$guncellemeDosyasi"; then
+        if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
+        then
+            echo "$platform::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
+            echo "$projeDizini güncelleme listesine eklendi"
+        fi
     fi
 fi
 
-# TODO Kurulum tamamlandıktan sonra log dosyasını öner
+# Kurulum tamamlandıktan sonra log dosyasını öner
 if evetHayirGoster "$baslikProje" "Kurulum tamamlandı. Bu kurulumun log dosyası:\n${urtotmKurucuLogDosyasi}.\nŞimdi görmek ister misiniz?"
 then
     if command -v xdg-open >& /dev/null; then
