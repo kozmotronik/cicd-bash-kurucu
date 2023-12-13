@@ -3,7 +3,8 @@
 # İleti kalıpları
 baslikProje="Üretim Otomasyonu"
 platformSec="Bir platform seçiniz"
-hedefiSec="Proje dizinini seçiniz"
+projeDizininiSec="Proje dizinini seçiniz"
+uretimDizininiSec="Projenin üretim dizinini seçiniz"
 yedekDiziniAdiniGir="Yedek görüntülerin kaydedileceği dizinin adını giriniz.\nDizin yoksa yaratılacaktır."
 islemSurdurulemiyor="işlem sürüdürülemiyor..."
 islemiSirasindaHata="işlemi sırasında bir hata oluştu."
@@ -20,6 +21,7 @@ export gitReposuBulunamadi
 
 # Platform tanımlamaları
 declare -A platformlar=(
+    [Üretim Otomasyonu Bash]=urtotm-bash
     [Android]=android-studio
     [MPLABX]=mplabx
 )
