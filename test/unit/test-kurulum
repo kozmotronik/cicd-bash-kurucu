@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# mplabx platform kurulumu testi
+# Çevre değişkenleri
+kurucuDizini="${urtotmBashDizini}/kurulum"
+araclarDizini="${urtotmBashDizini}/araclar"
+
+PATH+=":${araclarDizini}:${kurucuDizini}"
+
+# Kurulumu çalıştır
+kurucu
