@@ -197,15 +197,16 @@ mkdir -p "$projeLogDizini" # Projenin log dizinini yarat
 cat <<- SON > "$urtotmenv"
 export urtotm_projeAdi="$projeAdi"
 export urtotm_dialogBaslik="$dialogBaslik"
-export platform="$platform"
+export urtotm_platform="$platform"
 export urtotm_projeDizini="$projeDizini"
+export urtotm_projeGitDizini="${gitKancalariDizini%/hooks}"
 export urtotm_uretimDizini="$projeUretimDizini"
 export urtotm_yedekDizini="$yedekDizini"
 export urtotm_projeUrtotmDizini="$uretimOtomasyonuDizini"
-export urtotm_projeUrtotmEnv="$urtotmenv"
-export PATH+=:${araclarDizini}:${yedekDizini}:${uretimOtomasyonuDizini}
+export urtotm_projeUrtotmenv="$urtotmenv"
 export urtotm_projeLogDosyaOneki="${projeLogDosyaOneki}"
 export urtotm_projeLogDizini="$projeLogDizini"
+export PATH+=:${araclarDizini}:${yedekDizini}:${uretimOtomasyonuDizini}
 SON
 
 # Kancalara üretim otomasyonu config (urtotmenv) dosyasını source etme ifadesi ekle
@@ -218,8 +219,6 @@ while read -r kanca; do
 done < <(ls -I "*.sample")
 popd
 
-# Üretim otomasyonu projeleri için güncelleme girdisi oluşturma
-if [[ $platform != "${platformlar["Üretim Otomasyonu Bash"]}" ]]; then
 # En son hedefin güncelleme listesine eklenip eklenmeyeceğini sor.
 # Liste 3 alandan oluşur ve şu biçimdedir:
 #     $1           $2                   $3 
@@ -230,16 +229,15 @@ if [[ $platform != "${platformlar["Üretim Otomasyonu Bash"]}" ]]; then
 # yerinde üretim otomasyonu güncellemesi yapılır.
 # urtotmenv projenin üretim otomasyonu ile ilgili tüm bilgileri içerdiğinden
 # güncelleme için gerekli bilgileri sağlar.
-    guncellemeDosyasi="${ensonSurumDizini}/.guncellemeListesi"
-    if [[ ! -e $guncellemeDosyasi ]]; then
-        touch "$guncellemeDosyasi"
-    fi
-    if ! grep "$projeAdi" "$guncellemeDosyasi"; then
-        if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
-        then
-            echo "$platform::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
-            echo "$projeDizini güncelleme listesine eklendi"
-        fi
+guncellemeDosyasi="${ensonSurumDizini}/.guncellemeListesi"
+if [[ ! -e $guncellemeDosyasi ]]; then
+    touch "$guncellemeDosyasi"
+fi
+if ! grep "$projeAdi" "$guncellemeDosyasi"; then
+    if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
+    then
+        echo "$platform::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
+        echo "$projeDizini güncelleme listesine eklendi"
     fi
 fi
 
