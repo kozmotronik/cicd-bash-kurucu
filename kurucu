@@ -2,16 +2,11 @@
 urtotmKurucuDizini="$(realpath "$0")"
 urtotmKurucuDizini="${urtotmKurucuDizini%/*}"
 urtotmDizini="${urtotmKurucuDizini%/*}" # Bir üst dizin üretim otomasyonu dizini
-urtotmKurucuUretimDizini="${urtotmDizini%/*}" # Bir üst dizin çalışma dizini
-urtotmKurucuUretimDizini="${urtotmKurucuUretimDizini/üretim}" # Bir üst dizin çalışma dizini
-urtotmKurucuLogDizini="${urtotmKurucuUretimDizini%/*}/logs" # Bir üst dizin çalışma dizini
-echo "Kurucu dizini: $urtotmKurucuDizini"
-echo "Üretim Otomasyonu dizini: $urtotmKurucuDizini"
-echo "Çalışma dizini: $urtotmKurucuUretimDizini"
-echo "Log dizini: $urtotmKurucuLogDizini"
+urtotmBashUretimDizini="${urtotmDizini%/*}/üretim" # Bir üst dizin çalışma dizini
+urtotmKurucuLogDizini="${urtotmBashUretimDizini%/*}/logs" # Bir üst dizin çalışma dizini
 
 # Araçlar ve ek yollarını ekle
-PATH+=":${urtotmKurucuUretimDizini}/araclar"
+PATH+=":${urtotmBashUretimDizini}/araclar"
 PATH+=":${urtotmDizini}/araclar"
 PATH+=":${urtotmKurucuDizini}/ek"
 
@@ -19,8 +14,8 @@ if [[ ! -d $urtotmKurucuLogDizini ]]; then
     mkdir -p "$urtotmKurucuLogDizini"
 fi
 
-if [[ ! -d $urtotmKurucuUretimDizini ]]; then
-    mkdir -p "$urtotmKurucuUretimDizini"
+if [[ ! -d $urtotmBashUretimDizini ]]; then
+    mkdir -p "$urtotmBashUretimDizini"
 fi
 
 urtotmKurucuLogDosyasi="${urtotmKurucuLogDizini}/urtotm-bash-kurulum-$(date +"%Y%m%d-%H%M%S").log"
@@ -30,6 +25,10 @@ touch "$urtotmKurucuLogDosyasi"
 source etkilesim
 source ek
 source logcu "$urtotmKurucuLogDosyasi"
+echo "Kurucu dizini: $urtotmKurucuDizini"
+echo "Üretim Otomasyonu dizini: $urtotmDizini"
+echo "Çalışma dizini: $urtotmBashUretimDizini"
+echo "Log dizini: $urtotmKurucuLogDizini"
 
 # Tüm betiklerde kullanılan uygulamaların varlığını burada yokla
 if ! mesg=$(uygulamalari-yokla); then
@@ -111,11 +110,11 @@ if [[ ! -d "$uretimOtomasyonuDizini" ]]; then
     fi
 fi
 
-ensonSurumDizini="$(find "$urtotmKurucuUretimDizini" -type d -name ensonsürüm)"
+ensonSurumDizini="$(find "$urtotmBashUretimDizini" -type d -name ensonsürüm | tail -1)"
 echo "Enson sürüm dizini - $ensonSurumDizini"
 if [[ ! -d "$ensonSurumDizini" ]]; then
     echo "Enson sürüm dizini oluşturuluyor..."
-    ensonSurumDizini="${urtotmKurucuUretimDizini}/ensonsürüm"
+    ensonSurumDizini="${urtotmBashUretimDizini}/ensonsürüm"
     mkdir -p "$ensonSurumDizini"
 fi
 
