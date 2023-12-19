@@ -125,7 +125,8 @@ fi
 # PWD'yi etkilememek içi GIT_DIR git çevre değişkenini ilgili reponun git dizinine kur
 # GIT_DIR=Hedef-Repo.git git archive main | tar -xf - -C [Hedef dizin]
 # Hedef dizin var olmalı yoksa tar hata verir.
-ensonSurumPlatformDizini="${ensonSurumDizini}/urtotm-bash-${platform}"
+urtotmPlatformDiziniAdi="urtotm-bash-${platform}"
+ensonSurumPlatformDizini="${ensonSurumDizini}/${urtotmPlatformDiziniAdi}"
 echo "Enson sürüm platform dizini - $ensonSurumPlatformDizini"
 if [ ! -d "$ensonSurumPlatformDizini" ]; then
     # Önce dizini oluştur yoksa tar komutu hata verir
@@ -235,7 +236,7 @@ fi
 if ! grep "$projeAdi" "$guncellemeDosyasi"; then
     if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
     then
-        echo "$platform::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
+        echo "$urtotmPlatformDiziniAdi::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
         echo "$projeDizini güncelleme listesine eklendi"
     fi
 fi
