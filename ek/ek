@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # İleti kalıpları
-baslikProje="Üretim Otomasyonu"
+baslikProje="urtotm-bash"
 platformSec="Bir platform seçiniz"
 projeDizininiSec="Proje dizinini seçiniz"
 uretimDizininiSec="Projenin üretim dizinini seçiniz"
