@@ -47,7 +47,7 @@ while [[ -z "$projeAdi" ]]; do
     fi
 done
 projeAdi="${projeAdi//' '/-}" # Boşlukları tire ile değiştir
-dialogBaslik="${projeAdi} - ${baslikProje}"
+projeDialogBaslik="${projeAdi}-${baslikProje}"
 # echo "Proje adı: $projeAdi"
 # Önce platform bilgisini al
 # Mevcut platformlar: MPLABx, Android Studio
@@ -203,7 +203,7 @@ mkdir -p "$projeLogDizini" # Projenin log dizinini yarat
 # Yolları ve değişkenlerini çevresel değişkenler (environment variable) dosyasına yaz
 cat <<- SON > "$urtotmenv"
 export urtotm_projeAdi="$projeAdi"
-export urtotm_dialogBaslik="$dialogBaslik"
+export urtotm_dialogBaslik="$projeDialogBaslik"
 export urtotm_platform="$platform"
 export urtotm_projeDizini="$projeDizini"
 export urtotm_projeGitDizini="${gitKancalariDizini%/hooks}"
