@@ -80,6 +80,10 @@ fi
 platform=$tmp
 echo "Platform tamam: $platform"
 
+if [[ $platform == "${platformlar[Ceedling]}" ]]; then
+    urunUzantisi=$(girdiAl "$baslikProje" "$urunUzantisiniBelirt")
+fi
+
 if [[ ! -e "$projeDizini" ]]; then
     mesajGoster hata "$baslikProje" "Hedef için geçersiz bir dizin: $projeDizini"
     exit 1
@@ -138,13 +142,13 @@ echo "Enson sürüm platform dizini - $ensonSurumPlatformDizini"
 if [ ! -d "$ensonSurumPlatformDizini" ]; then
     # Önce dizini oluştur yoksa tar komutu hata verir
     mkdir -p "$ensonSurumPlatformDizini"
-    # Sürüm üretimi / çıkarıcı çalıştır
-    platformDizini="${urtotmDizini}/${platform}"
-    if ! GIT_DIR="$platformDizini/.git" git archive main ':!test*/*' | tar -xf - -C "$ensonSurumPlatformDizini"
-    then
-        mesajGoster hata "$baslikProje" "Platform enson sürüm üretimi $islemiSirasindaHata"
-        exit 1
-    fi
+fi
+# Sürüm üretimi / çıkarıcı çalıştır
+platformDizini="${urtotmDizini}/${platform}"
+if ! GIT_DIR="$platformDizini/.git" git archive main ':!test*/*' | tar -xf - -C "$ensonSurumPlatformDizini"
+then
+    mesajGoster hata "$baslikProje" "Platform enson sürüm üretimi $islemiSirasindaHata"
+    exit 1
 fi
 
 ensonSurumAraclarDizini="${ensonSurumDizini}/urtotm-bash-araclar"
@@ -152,13 +156,13 @@ echo "Enson sürüm araçlar dizini - $ensonSurumAraclarDizini"
 if [[ ! -d "$ensonSurumAraclarDizini" ]]; then
     # Önce dizini oluştur yoksa tar komutu hata verir
     mkdir -p "$ensonSurumAraclarDizini"
-    # Sürüm üretimi / çıkarıcı çalıştır
-    araclarDizini="${urtotmDizini}/araclar"
-    if ! GIT_DIR="$araclarDizini/.git" git archive main ':!test*/*' | tar -xf - -C "$ensonSurumAraclarDizini"
-    then
-        mesajGoster hata "$baslikProje" "Araçlar enson sürüm üretimi $islemiSirasindaHata"
-        exit 1
-    fi
+fi
+# Sürüm üretimi / çıkarıcı çalıştır
+araclarDizini="${urtotmDizini}/araclar"
+if ! GIT_DIR="$araclarDizini/.git" git archive main ':!test*/*' | tar -xf - -C "$ensonSurumAraclarDizini"
+then
+    mesajGoster hata "$baslikProje" "Araçlar enson sürüm üretimi $islemiSirasindaHata"
+    exit 1
 fi
 
 # find komutu bulunan dizinleri listelemeye en alt dizinlerden başlıyor gibi. Bu yüzden hedefin 
@@ -175,21 +179,23 @@ fi
 
 araclarDizini=~/.bin/urtotm-araclar
 # Ardından dosyalari rsync ile yerlerine kopyala
-rsync -qa --log-file="$urtotmKurucuLogDosyasi" --exclude=.git \
-    "${ensonSurumPlatformDizini}/git-hooks/" "${gitKancalariDizini}/"
-if [ ! $? ]; then
+# Git kancalarını hedefe yükle
+if ! rsync -qa --log-file="$urtotmKurucuLogDosyasi" --exclude=.git \
+    "${ensonSurumPlatformDizini}/git-hooks/" "${gitKancalariDizini}/"; then
     mesajGoster hata "$baslikProje" "Git kancaları $kurulumuSirasindaHata"
     exit 1
 fi
-rsync -qa --log-file="$urtotmKurucuLogDosyasi" --exclude={git-hooks,.git} --delete \
-    "${ensonSurumPlatformDizini}/" "${uretimOtomasyonuDizini}/"
-if [ ! $? ]; then
+
+# Platforma özel betik ve dosyaları yükle; ör. yayinla, disla vb.
+if ! rsync -qa --log-file="$urtotmKurucuLogDosyasi" --exclude={git-hooks,.git} --delete \
+    "${ensonSurumPlatformDizini}/" "${uretimOtomasyonuDizini}/"; then
     mesajGoster hata "$baslikProje" "Yayınlama betiği $kurulumuSirasindaHata"
     exit 1
 fi
+
 # Araçlar kendi alt dizininde olacağı için fazlalıkları güvenle silebiliriz
-rsync -qa --log-file="$urtotmKurucuLogDosyasi" --delete --exclude=.git "${ensonSurumAraclarDizini}/" "${araclarDizini}/"
-if [ ! $? ]; then
+if ! rsync -qa --log-file="$urtotmKurucuLogDosyasi" --delete --exclude=.git \
+    "${ensonSurumAraclarDizini}/" "${araclarDizini}/"; then
     mesajGoster hata "$baslikProje" "Üretim otomasyonu araçları $kurulumuSirasindaHata"
     exit 1
 fi
@@ -213,6 +219,7 @@ export urtotm_projeUrtotmDizini="$uretimOtomasyonuDizini"
 export urtotm_projeUrtotmenv="$urtotmenv"
 export urtotm_projeLogDosyaOneki="${projeLogDosyaOneki}"
 export urtotm_projeLogDizini="$projeLogDizini"
+export urtotm_urunUzantisi="$urunUzantisi"
 export PATH+=:${araclarDizini}:${yedekDizini}:${uretimOtomasyonuDizini}
 SON
 
@@ -240,7 +247,7 @@ guncellemeDosyasi="${ensonSurumDizini}/.guncellemeListesi"
 if [[ ! -e $guncellemeDosyasi ]]; then
     touch "$guncellemeDosyasi"
 fi
-if ! grep "$projeAdi" "$guncellemeDosyasi"; then
+if ! awk -v prj="$projeAdi" -F'::' '$2 == prj {print $2}' "$guncellemeDosyasi" &> /dev/null; then
     if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
     then
         echo "$urtotmPlatformDiziniAdi::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
