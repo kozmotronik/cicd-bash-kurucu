@@ -247,10 +247,12 @@ guncellemeDosyasi="${ensonSurumDizini}/.guncellemeListesi"
 if [[ ! -e $guncellemeDosyasi ]]; then
     touch "$guncellemeDosyasi"
 fi
-if ! awk -v prj="$projeAdi" -F'::' '$2 == prj {print $2}' "$guncellemeDosyasi" &> /dev/null; then
+
+projeListede=$(awk -v prj="$projeAdi" -F'::' '$2 == prj {print $2}' "$guncellemeDosyasi")
+if [[ -z "$projeListede" ]]; then
     if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
     then
-        echo "$urtotmPlatformDiziniAdi::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
+        echo "$platform::$projeAdi::$urtotmenv" >> "$guncellemeDosyasi"
         echo "$projeDizini güncelleme listesine eklendi"
     fi
 fi
