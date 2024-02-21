@@ -10,6 +10,7 @@ islemSurdurulemiyor="işlem sürüdürülemiyor..."
 islemiSirasindaHata="işlemi sırasında bir hata oluştu."
 kurulumuSirasindaHata="kurulumu sırasında bir hata oluştu."
 gitReposuBulunamadi="Hedefte bir git dizini bulunamadı\nLütfen önce 'git init' ile bir git reposu ilkleyip\nbu kurulumu yeniden çalıştırınız."
+urunUzantisiniBelirt="Ürün uzantısını giriniz. Ör. hex, out vb."
 
 export baslikProje
 export platformSec
@@ -24,6 +25,7 @@ declare -A platformlar=(
     [Üretim Otomasyonu Bash]=urtotm-bash
     [Android]=android-studio
     [MPLABX]=mplabx
+    [Ceedling]=ceedling
 )
 
 # $1 Dönüş kodu
