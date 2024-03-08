@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 urtotmKurucuDizini="$(realpath "$0")"
 urtotmKurucuDizini="${urtotmKurucuDizini%/*}"
 urtotmDizini="${urtotmKurucuDizini%/*}" # Bir üst dizin üretim otomasyonu dizini
