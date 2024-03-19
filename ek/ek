@@ -1,24 +1,16 @@
 #!/usr/bin/env bash
 
 # İleti kalıpları
-baslikProje="urtotm-bash"
-platformSec="Bir platform seçiniz"
-projeDizininiSec="Proje dizinini seçiniz"
-uretimDizininiSec="Projenin üretim dizinini seçiniz"
-yedekDiziniAdiniGir="Yedek görüntülerin kaydedileceği dizinin adını giriniz.\nDizin yoksa yaratılacaktır."
-islemSurdurulemiyor="işlem sürüdürülemiyor..."
-islemiSirasindaHata="işlemi sırasında bir hata oluştu."
-kurulumuSirasindaHata="kurulumu sırasında bir hata oluştu."
-gitReposuBulunamadi="Hedefte bir git dizini bulunamadı\nLütfen önce 'git init' ile bir git reposu ilkleyip\nbu kurulumu yeniden çalıştırınız."
-urunUzantisiniBelirt="Ürün uzantısını giriniz. Ör. hex, out vb."
-
-export baslikProje
-export platformSec
-export hedefiSec
-export urtotm_yedekDiziniAdiniGir
-export islemSurdurulemiyor
-export kurulumuSirasindaHata
-export gitReposuBulunamadi
+export baslikProje="urtotm-bash"
+export platformSec="Bir platform seçiniz"
+export projeDizininiSec="Proje dizinini seçiniz"
+export uretimDizininiSec="Projenin üretim dizinini seçiniz"
+export yedekDiziniAdiniGir="Yedek görüntülerin kaydedileceği dizinin adını giriniz.\nDizin yoksa yaratılacaktır."
+export islemSurdurulemiyor="işlem sürüdürülemiyor..."
+export islemiSirasindaHata="işlemi sırasında bir hata oluştu."
+export kurulumuSirasindaHata="kurulumu sırasında bir hata oluştu."
+export gitReposuBulunamadi="Hedefte bir git dizini bulunamadı\nLütfen önce 'git init' ile bir git reposu ilkleyip\nbu kurulumu yeniden çalıştırınız."
+export urunUzantisiniBelirt="Ürün uzantısını giriniz. Ör. hex, out vb."
 
 # Platform tanımlamaları
 declare -A platformlar=(
@@ -50,7 +42,7 @@ denetleBuyukKucukDuyarsiz() {
 platformGecerli() {
     for p in "${!platformlar[@]}"; do
 #         echo "platformGecerli: Sıradaki $p"
-        if denetleBuyukKucukDuyarsiz "$1" "$p"; then
+        if denetleBuyukKucukDuyarsiz "$1" "$p" || denetleBuyukKucukDuyarsiz "$1" "${platformlar[$p]}"; then
             echo "${platformlar[$p]}"
             return 0
         fi
