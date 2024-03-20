@@ -10,24 +10,35 @@ declare -A pkgmgrs=(
     [ubuntu]='apt-get install -y'
     [arch]='pacman -S --noconfirm'
     ['red hat']='yum -y install'
-    [alpine]='apt add'
+    [alpine]='apk add'
     [opensuse]='zypper in -y'
     [fedora]='dnf install -y'
 )
 
 # Distro adını al (sık kullanılanlar)
-distro=$(cat /etc/os-release | tr [:upper:] [:lower:] | grep -Poi '(debian|ubuntu|arch|red hat|alpine|fedora|opensuse)' | uniq)
+distro=$(cat /etc/os-release | tr [:upper:] [:lower:] | grep -Eoi '(debian|ubuntu|arch|red hat|alpine|fedora|opensuse)' | uniq)
 
 # Gerekli uygulamaları dosyadan oku
-dosya=$(find $PWD -type f -name uygulamalar)
-if [[ -z "$dosya" ]]; then
-    echo "$PWD dizini içerisinde uygulamalar dosyası bulunamadı"
+otoKurulum=$1
+appcore=$(find "$PWD" -type f -name 'app-core')
+if [[ -z "$appcore" ]]; then
+    echo "$PWD dizini içerisinde temel uygulamalar dosyası bulunamadı"
     exit 1
 fi
-
-while read key val; do
+while read -r key val; do
     dict[$key]=$val
-done <"$dosya"
+done <"$appcore"
+if [[ $otoKurulum -eq 0 ]]; then
+    # Etkileşimli kipte core uygulamalarla birlikte extra uygulamar da gereklidir
+    appextra=$(find "$PWD" -type f -name 'app-extra')
+    if [[ -z "$appcore" ]]; then
+        echo "$PWD dizini içerisinde extra uygulamalar dosyası bulunamadı"
+        exit 1
+    fi
+    while read -r key val; do
+        dict[$key]=$val
+    done <"$appextra"
+fi
 
 # Uygulamaların varlığını yokla
 for k in "${!dict[@]}"; do
