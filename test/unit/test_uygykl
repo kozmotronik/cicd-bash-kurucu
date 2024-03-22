@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+PATH=$PATH:/disk/Projeler/UretimOtomasyonu/Bash/kurucu/kurucu/ek
+
+uygulamalari-yokla
