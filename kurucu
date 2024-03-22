@@ -81,7 +81,6 @@ while ((syc < sayim)); do
             fi
         done
         projeAdi="${projeAdi//' '/-}" # Boşlukları tire ile değiştir
-        projeDialogBaslik="${projeAdi}-${baslikProje}"
         # echo "Proje adı: $projeAdi"
         # Önce platform bilgisini al
         # Mevcut platformlar: MPLABx, Android Studio
@@ -181,6 +180,9 @@ while ((syc < sayim)); do
     echo "Proje çıktı dizini: $projeCiktiDizini"
     echo "Proje yedekleme dizini adı $projeYedeklemeDiziniAdi"
 
+    # Projede gösterilecek dialoglar için başlık oluştur
+    projeDialogBaslik="${projeAdi}-${baslikProje}"
+    
     # Hedef dizinleri yokla ve gerekirse oluştur
     projeUrtotmDizini="${projeCiktiDizini}/.urtotm"
     projeYedeklemeDizini="${projeCiktiDizini}/${projeYedeklemeDiziniAdi}"
