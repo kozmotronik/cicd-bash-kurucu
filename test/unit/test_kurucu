@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# mplabx platform kurulumu testi
+# Çevre değişkenleri
+urtotmBashDizini=/disk/Projeler/UretimOtomasyonu/Bash
+kurucuEnsonsurumDizini="${urtotmBashDizini}/kurucu/üretim/ensonsürüm"
+kurucuDizini="${urtotmBashDizini}/kurucu/kurucu"
+araclarEnsonsurumDizini="${urtotmBashDizini}/araclar/üretim/ensonsürüm"
+araclarDizini="${urtotmBashDizini}/araclar/araclar"
+
+PATH+=":${kurucuEnsonsurumDizini}:${araclarEnsonsurumDizini}:${araclarDizini}:${kurucuDizini}"
+
+# Kurulumu çalıştır
+kurucu
