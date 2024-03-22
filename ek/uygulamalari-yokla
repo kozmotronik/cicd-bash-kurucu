@@ -20,9 +20,11 @@ distro=$(cat /etc/os-release | tr [:upper:] [:lower:] | grep -Eoi '(debian|ubunt
 
 # Gerekli uygulamaları dosyadan oku
 otoKurulum=$1
-appcore=$(find "$PWD" -type f -name 'app-core')
+# Bu betiğin kendi dizinini al ve uygulama listesi dosyalarını burada ara.
+kendiDizini="$(dirname $0)"
+appcore=$(find "$kendiDizini" -type f -name 'app-core')
 if [[ -z "$appcore" ]]; then
-    echo "$PWD dizini içerisinde temel uygulamalar dosyası bulunamadı"
+    echo "$kendiDizini dizini içerisinde temel uygulamalar dosyası bulunamadı"
     exit 1
 fi
 while read -r key val; do
@@ -30,9 +32,9 @@ while read -r key val; do
 done <"$appcore"
 if [[ $otoKurulum -eq 0 ]]; then
     # Etkileşimli kipte core uygulamalarla birlikte extra uygulamar da gereklidir
-    appextra=$(find "$PWD" -type f -name 'app-extra')
+    appextra=$(find "$kendiDizini" -type f -name 'app-extra')
     if [[ -z "$appcore" ]]; then
-        echo "$PWD dizini içerisinde extra uygulamalar dosyası bulunamadı"
+        echo "$kendiDizini dizini içerisinde extra uygulamalar dosyası bulunamadı"
         exit 1
     fi
     while read -r key val; do
