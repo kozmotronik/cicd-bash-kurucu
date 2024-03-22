@@ -62,7 +62,7 @@ else
 fi
 
 # Tüm betiklerde kullanılan uygulamaların varlığını burada yokla
-if ! mesg=$(uygulamalari-yokla $otoKurulum); then
+if ! mesg=$(uygykl $otoKurulum); then
     # Yüklenmesi gereken uygulamalar var...
     mesajGoster uyari "$baslikProje" "$mesg"
     exit 1
@@ -74,10 +74,23 @@ syc=0
 while ((syc < sayim)); do
     if [[ "$otoKurulum" == 0 ]]; then
         # Projenin adını al
-        while [[ -z "$projeAdi" ]]; do
+        deneme=3
+        while [[ $deneme -gt 0 ]]; do
             projeAdi=$(girdiAl "$baslikProje" "Projenizin adını giriniz")
+            dk=$?
+            if [[ "$dk" -eq "1" ]]; then
+                mesajGoster uyari "$baslikProje" "Kurulum iptal edildi." &
+                exit 1
+            fi
             if [[ -z "$projeAdi" ]]; then
                 mesajGoster hata "$baslikProje" "Proje adı boş bırakılmamalıdır!"
+                ((deneme--))
+                if ((deneme <= 0)); then
+                    mesajGoster hata "$baslikProje" "Geçerli bir proje adı girilmediğinden kurulum sürdürülemiyor!"
+                    exit 1
+                fi
+            else
+                break
             fi
         done
         projeAdi="${projeAdi//' '/-}" # Boşlukları tire ile değiştir
