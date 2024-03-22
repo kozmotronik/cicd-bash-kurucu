@@ -16,7 +16,7 @@ declare -A pkgmgrs=(
 )
 
 # Distro adını al (sık kullanılanlar)
-distro=$(cat /etc/os-release | tr [:upper:] [:lower:] | grep -Eoi '(debian|ubuntu|arch|red hat|alpine|fedora|opensuse)' | uniq)
+distro=$(tr "[:upper:]" "[:lower:]" < /etc/os-release | grep -Eoi '(debian|ubuntu|arch|red hat|alpine|fedora|opensuse)' | uniq)
 
 # Gerekli uygulamaları dosyadan oku
 otoKurulum=$1
