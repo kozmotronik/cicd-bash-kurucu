@@ -91,9 +91,6 @@ if [[ "${#olmayanKeyler[@]}" -gt 0 ]]; then
             done
             msg+=" uygulamalarından herhangi birinin,\n"
         else
-            if [[ $vals =~ "inotify" ]]; then
-                vals="inotify-tools"
-            fi
             yukle+=" $vals"
             msg+="'$vals' uygulamasının,\n"
         fi
