@@ -4,7 +4,6 @@
 
 # Associative array (dictionary) tanımla
 declare -A dict
-declare -A varlik
 declare -A pkgmgrs=(
     [debian]='apt-get install -y'
     [ubuntu]='apt-get install -y'
@@ -16,12 +15,12 @@ declare -A pkgmgrs=(
 )
 
 # Distro adını al (sık kullanılanlar)
-distro=$(cat /etc/os-release | tr [:upper:] [:lower:] | grep -Eoi '(debian|ubuntu|arch|red hat|alpine|fedora|opensuse)' | uniq)
+distro=$(tr "[:upper:]" "[:lower:]" < /etc/os-release | grep -Eoi '(debian|ubuntu|arch|red hat|alpine|fedora|opensuse)' | uniq)
 
 # Gerekli uygulamaları dosyadan oku
 otoKurulum=$1
 # Bu betiğin kendi dizinini al ve uygulama listesi dosyalarını burada ara.
-kendiDizini="$(dirname $0)"
+kendiDizini="$(dirname "$0")"
 appcore=$(find "$kendiDizini" -type f -name 'app-core')
 if [[ -z "$appcore" ]]; then
     echo "$kendiDizini dizini içerisinde temel uygulamalar dosyası bulunamadı"
@@ -53,9 +52,8 @@ for k in "${!dict[@]}"; do
 #         echo $sayim
         var=0 # uygulama yok
         for vv in "${vals[@]}"; do
-            if command -v $vv &> /dev/null; then
+            if command -v "$vv" &> /dev/null; then
                 var=1 # uygulama var
-                varlik[$k]="$vv"
                 break
             fi
         done
@@ -64,10 +62,8 @@ for k in "${!dict[@]}"; do
         fi
     else
         # Bu grupta alternatif yok
-        if ! command -v $v &> /dev/null; then
+        if ! command -v "$v" &> /dev/null; then
             olmayanKeyler+=("$k") # uygulama yok
-        else
-            varlik[$k]="$v"
         fi
     fi
 done
@@ -91,28 +87,20 @@ if [[ "${#olmayanKeyler[@]}" -gt 0 ]]; then
             done
             msg+=" uygulamalarından herhangi birinin,\n"
         else
-            if [[ $vals =~ "inotify" ]]; then
-                vals="inotify-tools"
-            fi
-            yukle+=" $vals"
-            msg+="'$vals' uygulamasının,\n"
+            yukle+=" ${vals[*]}"
+            msg+="'${vals[*]}' uygulamasının,\n"
         fi
     done
     msg+="sistemde yüklü olması gereklidir.\nBu uygulamaları yükleyip kurulumu yeniden çalıştırınız."
     msg+="\n\nBu uygulamaları Linux dağıtımınızda yüklemek için"
     msg+="\naşağıdaki komutu yetkili kullanıcı olarak çalıştırınız."
-    msg+="\n\n$yukle"
+    msg+="\n\n$yukle\n"
 else
     msg="Gereken tüm uygulamalar sistemde yüklü.\nÜretim Otomasyonu şimdi kurulacak."
 fi
 # Bilgi mesajını görüntüle
 echo -e "$msg"
 
-# echo "${!varlik[@]}=${varlik[@]}"
-# Saptanan uygulamaları stdout'a yazdır
-# for k in "${!varlik[@]}"; do
-#     echo "$k=${varlik[$k]}"
-# done
 if [[ "${#olmayanKeyler[@]}" -eq 0 ]]; then
     exit 0
 else
