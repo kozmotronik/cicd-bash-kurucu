@@ -66,70 +66,121 @@ if ! mesg=$(uygykl $otoKurulum); then
     # Yüklenmesi gereken uygulamalar var...
     mesajGoster uyari "$baslikProje" "$mesg"
     exit 1
-else
-    mesajGoster bilgi "$baslikProje" "$mesg"
 fi
 
 syc=0
 while ((syc < sayim)); do
     if [[ "$otoKurulum" == 0 ]]; then
-        # Projenin adını al
-        deneme=3
-        while [[ $deneme -gt 0 ]]; do
-            projeAdi=$(girdiAl "$baslikProje" "Projenizin adını giriniz")
-            dk=$?
-            if [[ "$dk" -eq "1" ]]; then
-                mesajGoster uyari "$baslikProje" "Kurulum iptal edildi." &
-                exit 1
-            fi
-            if [[ -z "$projeAdi" ]]; then
-                mesajGoster hata "$baslikProje" "Proje adı boş bırakılmamalıdır!"
-                ((deneme--))
-                if ((deneme <= 0)); then
-                    mesajGoster hata "$baslikProje" "Geçerli bir proje adı girilmediğinden kurulum sürdürülemiyor!"
+        if command -v yad &>/dev/null; then
+            # YAD kurulu, yad ile tüm bilgileri tek pencerede al
+            deneme=3
+            # Seçenek listesini hazırla
+            pltsym=${#platformlar[@]}
+            ((pltsym -= 1)) # İndeks sayısına çevir
+            pltkeys=() # Platform keylerini yeni bir diziye al
+            for key in "${!platformlar[@]}"; do
+                pltkeys+=("$key")
+            done
+            yadscnk="" # Virgüllerle ayrılmış seçenek listesi oluştur
+            for s in $(seq 0 "$pltsym"); do
+                yadscnk+="${pltkeys[$s]}"
+                if [[ $s -lt $pltsym ]]; then
+                    yadscnk+=","
+                fi
+            done
+            echo "Yad seçenekler: $yadscnk"
+            while ((deneme > 0)); do
+                girdi=$(
+                    yad --title="Üretim Otomasyonu Kurulumu" --form= \
+                        --separator="," \
+                        --item-separator="," \
+                        --field="Proje adı*" \
+                        --field="Platform*":CB \
+                        --field="Proje dizini*":MDIR \
+                        --field="Proje çıktı dizini*":MDIR \
+                        --field="Yedekleme dizini adı" \
+                        --field="Ürün uzantısı" \
+                        --field="Güncelleme listesine ekle":CHK \
+                        --field="":LBL \
+                        --field="(*) ile işaretli alanlar gereklidir ve boş bırakılmamalıdır.":LBL \
+                        "" "$yadscnk" "" "" "yedekler" "" "TRUE"
+                )
+                dk=$?
+                if [[ $dk == "1" ]]; then
+                    mesajGoster uyari "$baslikProje" "Kurulum iptal edildi." &
                     exit 1
                 fi
-            else
-                break
+                readarray -t alanlar < <(echo "$girdi" | awk -F',' '{ for (i=1; i<=NF; i++) {print $i} }')
+                echo "${alanlar[@]}"
+                projeAdi="${alanlar[0]}"
+                platform="${alanlar[1]}"
+                projeDizini="${alanlar[2]}"
+                projeCiktiDizini="${alanlar[3]}"
+                projeYedeklemeDiziniAdi="${alanlar[4]}"
+                urunUzantisi="${alanlar[5]}"
+                guncellemeAl="${alanlar[6]}"
+                if [[ -z "$projeAdi" || -z "$platform" || -z "$projeDizini" || -z "$projeCiktiDizini" ]]
+                then
+                    ((--deneme))
+                    if ((deneme <= 0)); then
+                        mesajGoster hata "$baslikProje" "Gerekli bilgiler girilmediğinden kurulum sürdürülemiyor!"
+                        exit 1
+                    fi
+                else
+                    break
+                fi
+            done
+        else
+            # Projenin adını al
+            deneme=3
+            while [[ $deneme -gt 0 ]]; do
+                projeAdi=$(girdiAl "$baslikProje" "Projenizin adını giriniz")
+                dk=$?
+                if [[ "$dk" == "1" ]]; then
+                    mesajGoster uyari "$baslikProje" "Kurulum iptal edildi." &
+                    exit 1
+                fi
+                if [[ -z "$projeAdi" ]]; then
+                    mesajGoster hata "$baslikProje" "Proje adı boş bırakılmamalıdır!"
+                    ((--deneme))
+                    if ((deneme <= 0)); then
+                        mesajGoster hata "$baslikProje" "Geçerli bir proje adı girilmediğinden kurulum sürdürülemiyor!"
+                        exit 1
+                    fi
+                else
+                    break
+                fi
+            done
+            # echo "Proje adı: $projeAdi"
+            # Önce platform bilgisini al
+            # Mevcut platformlar: MPLABx, Android Studio
+            platform=$(secenekGoster "$baslikProje" "$platformSec" "${!platformlar[@]}")
+            dk=$?
+            donusKoduDegerlendir "$dk" "Platform seçimi"
+            # echo $platform seçildi
+            projeDizini=$(dizinSec "$baslikProje - $projeDizininiSec")
+            dk=$?
+            donusKoduDegerlendir "$dk" "Hedef seçimi"
+            # echo $projeDizini seçildi
+            projeCiktiDizini=$(dizinSec "$baslikProje - $uretimDizininiSec")
+            dk=$?
+            donusKoduDegerlendir "$dk" "Üretim dizini seçimi"
+            # echo $projeCiktiDizini seçildi
+            projeYedeklemeDiziniAdi=$(girdiAl "$baslikProje" "$yedekDiziniAdiniGir")
+            dk=$?
+            donusKoduDegerlendir "$dk" "Yedek dizini bilgisi alma"
+            # echo $projeYedeklemeDiziniAdi seçildi
+            
+            if [[ $platform == "${platformlar[Ceedling]}" ]]; then
+                urunUzantisi=$(girdiAl "$baslikProje" "$urunUzantisiniBelirt")
             fi
-        done
-        projeAdi="${projeAdi//' '/-}" # Boşlukları tire ile değiştir
-        # echo "Proje adı: $projeAdi"
-        # Önce platform bilgisini al
-        # Mevcut platformlar: MPLABx, Android Studio
-        platform=$(secenekGoster "$baslikProje" "$platformSec" "${!platformlar[@]}")
-        dk=$?
-        donusKoduDegerlendir "$dk" "Platform seçimi"
-        # echo $platform seçildi
-        projeDizini=$(dizinSec "$baslikProje - $projeDizininiSec")
-        dk=$?
-        donusKoduDegerlendir "$dk" "Hedef seçimi"
-        # echo $projeDizini seçildi
-        projeCiktiDizini=$(dizinSec "$baslikProje - $uretimDizininiSec")
-        dk=$?
-        donusKoduDegerlendir "$dk" "Üretim dizini seçimi"
-        # echo $projeCiktiDizini seçildi
-        projeYedeklemeDiziniAdi=$(girdiAl "$baslikProje" "$yedekDiziniAdiniGir")
-        dk=$?
-        donusKoduDegerlendir "$dk" "Yedek dizini bilgisi alma"
-        # echo $projeYedeklemeDiziniAdi seçildi
 
-        if ! tmp=$(platformGecerli "$platform"); then
-            mesajGoster hata "$baslikProje" "Geçersiz bir platform: $tmp" &
-            exit 1
+            if [[ ! -e "$projeDizini" ]]; then
+                mesajGoster hata "$baslikProje" "Hedef için geçersiz bir dizin: $projeDizini" &
+                exit 1
+            fi
+            echo "Hedef tamam: $projeDizini"
         fi
-        platform=$tmp
-        echo "Platform tamam: $platform"
-
-        if [[ $platform == "${platformlar[Ceedling]}" ]]; then
-            urunUzantisi=$(girdiAl "$baslikProje" "$urunUzantisiniBelirt")
-        fi
-
-        if [[ ! -e "$projeDizini" ]]; then
-            mesajGoster hata "$baslikProje" "Hedef için geçersiz bir dizin: $projeDizini" &
-            exit 1
-        fi
-        echo "Hedef tamam: $projeDizini"
     else
         girdi=${girdiler[$syc]}
         if [[ -z "$girdi" ]]; then
@@ -188,11 +239,19 @@ while ((syc < sayim)); do
         projeYedeklemeDiziniAdi=yedekler
     fi
 
+    if ! tmp=$(platformGecerli "$platform"); then
+        mesajGoster hata "$baslikProje" "Geçersiz bir platform: $tmp" &
+        exit 1
+    fi
+    platform=$tmp
+    echo "Platform tamam: $platform"
+
     echo "Platform: $platform"
     echo "Proje dizini: $projeDizini"
     echo "Proje çıktı dizini: $projeCiktiDizini"
     echo "Proje yedekleme dizini adı $projeYedeklemeDiziniAdi"
 
+    projeAdi="${projeAdi//' '/-}" # Boşlukları tire ile değiştir
     # Projede gösterilecek dialoglar için başlık oluştur
     projeDialogBaslik="${projeAdi}-${baslikProje}"
     
@@ -446,10 +505,15 @@ SON
     projeListede=$(awk -v prj="$projeAdi" -F'::' '$2 == prj {print $2}' "$guncellemeDosyasi")
     if [[ $otoKurulum -eq 0 ]]; then
         if [[ -z "$projeListede" ]]; then
-            if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
-            then
-                echo "$platform::$projeAdi::$projeUrtotmenvDosyasi" >> "$guncellemeDosyasi"
-                echo "$projeAdi güncelleme listesine eklendi"
+            if [[ -n "$guncellemeAl" ]]; then
+                if [[ ${guncellemeAl,,} =~ ^(evet|yes|e|y|1|true)$ ]]; then
+                    echo "$platform::$projeAdi::$projeUrtotmenvDosyasi" >> "$guncellemeDosyasi"
+                fi
+            else
+                if evetHayirGoster "$baslikProje" "Bu hedef ürün otomasyonu güncelleme listesine eklensin mi?"
+                then
+                    echo "$platform::$projeAdi::$projeUrtotmenvDosyasi" >> "$guncellemeDosyasi"
+                fi
             fi
         fi
 
@@ -466,7 +530,6 @@ SON
     else
         if [[ -z "$projeListede" ]] && [[ ${guncellemeAl,,} =~ ^(evet|yes|e|y|1|true)$ ]]; then
             echo "$platform::$projeAdi::$projeUrtotmenvDosyasi" >> "$guncellemeDosyasi"
-            echo "$projeAdi güncelleme listesine eklendi"
         elif [[ -n "$projeListede" ]] && [[ ${guncellemeAl,,} =~ ^(hayır|no|h|n|0|false)$ ]]; then
             # Güncelleme dosyasından kaydı sil
             sed -i "/$projeAdi/d" "$guncellemeDosyasi"
