@@ -134,12 +134,11 @@ while ((syc < sayim)); do
             # Projenin adını al
             deneme=3
             while [[ $deneme -gt 0 ]]; do
-                projeAdi=$(girdiAl "$baslikProje" "Projenizin adını giriniz")
-                dk=$?
-                if [[ "$dk" == "1" ]]; then
+                if ! girdiAl "$baslikProje" "Projenizin adını giriniz"; then
                     mesajGoster uyari "$baslikProje" "Kurulum iptal edildi." &
                     exit 1
                 fi
+                read -u 4 projeAdi
                 if [[ -z "$projeAdi" ]]; then
                     mesajGoster hata "$baslikProje" "Proje adı boş bırakılmamalıdır!"
                     ((--deneme))
@@ -154,20 +153,24 @@ while ((syc < sayim)); do
             # echo "Proje adı: $projeAdi"
             # Önce platform bilgisini al
             # Mevcut platformlar: MPLABx, Android Studio
-            platform=$(secenekGoster "$baslikProje" "$platformSec" "${!platformlar[@]}")
+            secenekGoster "$baslikProje" "$platformSec" "${!platformlar[@]}"
             dk=$?
+            read -u 4 platform
             donusKoduDegerlendir "$dk" "Platform seçimi"
             # echo $platform seçildi
-            projeDizini=$(dizinSec "$baslikProje - $projeDizininiSec")
+            dizinSec "$baslikProje - $projeDizininiSec"
             dk=$?
+            read -u 4 projeDizini
             donusKoduDegerlendir "$dk" "Hedef seçimi"
             # echo $projeDizini seçildi
-            projeCiktiDizini=$(dizinSec "$baslikProje - $uretimDizininiSec")
+            dizinSec "$baslikProje - $uretimDizininiSec"
             dk=$?
+            read -u 4 projeCiktiDizini
             donusKoduDegerlendir "$dk" "Üretim dizini seçimi"
             # echo $projeCiktiDizini seçildi
-            projeYedeklemeDiziniAdi=$(girdiAl "$baslikProje" "$yedekDiziniAdiniGir")
+            girdiAl "$baslikProje" "$yedekDiziniAdiniGir"
             dk=$?
+            read -u 4 projeYedeklemeDiziniAdi
             donusKoduDegerlendir "$dk" "Yedek dizini bilgisi alma"
             # echo $projeYedeklemeDiziniAdi seçildi
             
