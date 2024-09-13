@@ -16,6 +16,7 @@ export urunUzantisiniBelirt="Ürün uzantısını giriniz. Ör. hex, out vb."
 declare -A platformlar=(
     [Üretim Otomasyonu Bash]=urtotm-bash
     [Android]=android-studio
+    [Flutter]=flutter
     [MPLABX]=mplabx
     [Ceedling]=ceedling
 )
